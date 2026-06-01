@@ -1,8 +1,43 @@
 # Burning and Booting WII-AI Chatbot from DVD-R
 
-> Important: a stock unmodified Wii cannot boot burned backup discs directly.
+## Plug-n-Play (Recommended)
 
-## 1) Requirements
+**One command does everything:**
+
+```bash
+./build_iso.sh
+```
+
+This will:
+1. Build the Wii app (`app.dol`)
+2. Generate all required disc metadata
+3. Package everything into a burnable Wii ISO
+
+Output: `wii-ai-chatbot.iso` — ready to burn.
+
+### Burn to DVD-R
+
+| OS | Tool | Steps |
+|----|------|-------|
+| Windows | ImgBurn | Write image → select ISO → speed 2x–4x → burn |
+| Linux | Brasero | Burn Image → select ISO → speed 2x–4x → burn |
+| macOS | Disk Utility or `hdiutil burn wii-ai-chatbot.iso` | |
+
+### Boot on Wii
+
+1. Insert burned DVD-R into softmodded Wii
+2. Launch via **Priiloader** autoboot or **backup disc loader**
+3. Read the Wii IP address on TV
+4. Open `http://<wii-ip>/` on your iPad/phone
+5. Chat with the AI!
+
+---
+
+## Manual Steps (Advanced)
+
+> Only needed if you want to customize the disc layout.
+
+### Requirements
 - Softmodded Nintendo Wii with **Homebrew Channel** and **BootMii** installed
 - Backup-disc capable setup: **Priiloader + backup launcher** or compatible **modchip**
 - Blank **DVD-R** disc (avoid DVD+R when possible)
@@ -10,53 +45,30 @@
 - Burning software: **ImgBurn** (Windows) or **Brasero** (Linux)
 - Wiimms ISO Tools (`wit`)
 
-## 2) Build the `.dol`
-From the repository root:
+### Build the `.dol`
 
 ```bash
 cd wii
 make
 ```
 
-This creates `wii/app.dol`.
-
-## 3) Create a bootable Wii ISO with `wit`
-Create a temporary disc layout:
+### Create ISO manually
 
 ```bash
 mkdir -p /tmp/wii-ai-disc/sys
 cp wii/app.dol /tmp/wii-ai-disc/sys/main.dol
+# Add boot.bin, bi2.bin, apploader.img to /tmp/wii-ai-disc/sys/
+wit copy /tmp/wii-ai-disc wii-ai-chatbot.iso
 ```
 
-Add valid disc metadata files (`boot.bin`, `bi2.bin`, `apploader.img`) from a legal homebrew-compatible disc template, then build ISO:
+### Burn and boot
 
-```bash
-wit copy /tmp/wii-ai-disc wii-ai-chatbot.iso --dest .
-```
+Same as the plug-n-play section above.
 
-Optional verify:
+---
 
-```bash
-wit verify wii-ai-chatbot.iso
-```
+## Troubleshooting
 
-## 4) Burn ISO to DVD-R (ImgBurn)
-1. Open **ImgBurn** → *Write image file to disc*
-2. Source: `wii-ai-chatbot.iso`
-3. Speed: **2x to 4x**
-4. Enable verify after burn
-5. Start burn
-
-## 5) Boot on softmodded Wii
-- Insert burned DVD-R
-- Launch through **Priiloader** autoboot path or your installed **backup disc launcher**
-- If your setup supports it, the DOL boots and starts the chat server
-
-## 6) Network setup
-Before launching, configure Wii WiFi in:
-- Wii Options → Wii Settings → Internet
-
-## 7) Connect from iPad
-- Read the Wii IP printed on TV (example `192.168.1.45`)
-- On iPad Safari open: `http://<wii-ip>/`
-- Chat with Wii AI from the browser page
+- **Disc does not boot**: Stock Wii cannot boot burned discs without softmod/modchip + compatible loader.
+- **WiFi not connecting**: Reconfigure in Wii Options → Wii Settings → Internet.
+- **Can't reach Wii from browser**: Make sure iPad and Wii are on the same WiFi network.

@@ -41,5 +41,9 @@ $(OUTPUT).dol: $(OUTPUT).elf
 clean:
 	rm -rf $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
 
+iso: all
+	@echo "Building plug-n-play ISO..."
+	cd $(CURDIR)/.. && bash build_iso.sh
+
 # To wrap app.dol into a bootable ISO with Wiimms ISO Tools (wit),
 # create a Wii disc layout and use: wit copy <disc-folder> wii-ai-chatbot.iso

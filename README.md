@@ -24,6 +24,7 @@ WII-AI Chatbot is a Nintendo Wii homebrew application that runs a lightweight ru
 
 ```
 WII-ai-chatbot/
+├── build_iso.sh          ← ONE-COMMAND plug-n-play builder
 ├── wii/
 │   ├── source/
 │   │   ├── main.c
@@ -55,8 +56,25 @@ make
 
 Output: `wii/app.dol`
 
-## Burn to disc
-See [burn/burn_instructions.md](burn/burn_instructions.md) for full workflow:
+## Plug-n-Play: Build & Burn (one command)
+
+The easiest way to go from source to a bootable disc:
+
+```bash
+./build_iso.sh
+```
+
+This single script:
+1. Builds the Wii app
+2. Generates all required disc metadata (boot.bin, bi2.bin, apploader)
+3. Packages into a ready-to-burn Wii ISO
+
+Then just burn `wii-ai-chatbot.iso` to a DVD-R at 2x–4x speed and boot on your softmodded Wii.
+
+See [burn/burn_instructions.md](burn/burn_instructions.md) for full details.
+
+## Burn to disc (manual)
+See [burn/burn_instructions.md](burn/burn_instructions.md) for the manual workflow:
 - Build `app.dol`
 - Create Wii ISO with `wit`
 - Burn to DVD-R at low speed (2x–4x)
