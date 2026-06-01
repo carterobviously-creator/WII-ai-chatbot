@@ -13,16 +13,17 @@ INCLUDES := source
 
 OUTPUT := $(CURDIR)/$(TARGET)
 
-CFILES := $(notdir $(wildcard $(SOURCES)/*.c))
+# Only compile the offline TV chat sources (no network code)
+CFILES := main.c ai_brain.c keyboard.c tv_chat.c
 OFILES := $(addprefix $(BUILD)/,$(CFILES:.c=.o))
 
-LIBS := -lwiiuse -logi -lasnd -lbte -logc -lm
+LIBS := -lwiiuse -lbte -logc -lm
 INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) -I$(LIBOGC_INC)
 
 CFLAGS := -g -O2 -Wall $(MACHDEP) $(INCLUDE)
 LDFLAGS := -g $(MACHDEP) $(LIBPATHS) $(LIBS)
 
-.PHONY: all clean
+.PHONY: all clean iso
 
 all: $(OUTPUT).dol
 
@@ -44,6 +45,3 @@ clean:
 iso: all
 	@echo "Building plug-n-play ISO..."
 	cd $(CURDIR)/.. && bash build_iso.sh
-
-# To wrap app.dol into a bootable ISO with Wiimms ISO Tools (wit),
-# create a Wii disc layout and use: wit copy <disc-folder> wii-ai-chatbot.iso

@@ -1,21 +1,32 @@
 # WII-AI Chatbot
 
-WII-AI Chatbot is a Nintendo Wii homebrew application that runs a lightweight rule-based chatbot engine locally on Wii hardware and exposes a browser chat UI over WiFi.
+WII-AI Chatbot is a Nintendo Wii homebrew application that runs a lightweight rule-based chatbot directly on your TV. **No WiFi, no internet, no phone required** — just burn the disc and go.
 
 ## What this project does
-- Boots as a Wii homebrew app (`app.dol`)
-- Initializes Wii WiFi and prints the Wii IP on TV
-- Runs an HTTP server on port 80
-- Serves a touch-friendly iPad chat UI at `/`
-- Handles `/chat?msg=...` and replies from a rule-based AI brain in C
+- Boots as a Wii homebrew app (`app.dol`) from a burned DVD-R
+- Displays a chat interface directly on your TV
+- Uses an on-screen keyboard controlled by the Wii Remote D-pad
+- AI chatbot responds instantly — everything runs locally on the Wii CPU
+- **Plug and play**: burn disc → insert → boot → chat
+
+## How it works
+1. Burn the ISO to a DVD-R
+2. Put the disc in your softmodded Wii
+3. Boot it
+4. Chat on your TV using the Wii Remote:
+   - **D-pad**: Move cursor on the on-screen keyboard
+   - **A button**: Type the highlighted letter
+   - **B button**: Backspace/delete
+   - **+ button**: Send your message
+   - **HOME**: Exit
 
 ## Hardware requirements
-- Nintendo Wii with softmod / modchip support for backup disc launching
-- DVD-R media for burned disc workflow
-- iPad or phone with modern browser (Safari recommended)
-- WiFi router (Wii + iPad on same network)
+- Nintendo Wii with softmod / modchip for backup disc launching
+- DVD-R media for burned disc
+- Wii Remote
+- TV (any TV the Wii supports)
 
-## Software requirements
+## Software requirements (for building)
 - [devkitPro + devkitPPC + libogc](https://devkitpro.org/)
 - Wiimms ISO Tools (`wit`)
 - ImgBurn (Windows) or Brasero (Linux) for disc burning
@@ -27,16 +38,15 @@ WII-ai-chatbot/
 ├── build_iso.sh          ← ONE-COMMAND plug-n-play builder
 ├── wii/
 │   ├── source/
-│   │   ├── main.c
-│   │   ├── http_server.c
-│   │   ├── http_server.h
-│   │   ├── ai_brain.c
-│   │   ├── ai_brain.h
-│   │   └── chat_page.h
+│   │   ├── main.c           ← Entry point (no network)
+│   │   ├── tv_chat.c        ← TV chat display loop
+│   │   ├── tv_chat.h
+│   │   ├── keyboard.c       ← On-screen keyboard (D-pad)
+│   │   ├── keyboard.h
+│   │   ├── ai_brain.c       ← Rule-based AI engine
+│   │   └── ai_brain.h
 │   ├── Makefile
 │   └── meta.xml
-├── ipad/
-│   └── index.html
 ├── burn/
 │   └── burn_instructions.md
 └── README.md
@@ -81,22 +91,23 @@ See [burn/burn_instructions.md](burn/burn_instructions.md) for the manual workfl
 - Launch with Priiloader / backup launcher
 
 ## Boot and use
-1. Boot the app from your homebrew/backup-disc launcher.
-2. Wait for TV output showing the Wii IP address.
-3. Open `http://<wii-ip>/` on iPad Safari.
-4. Start chatting.
-5. Press Wii Remote HOME to exit.
+1. Burn the ISO to DVD-R (see build instructions above)
+2. Insert disc into softmodded Wii
+3. Boot via Priiloader or backup disc launcher
+4. Use D-pad to navigate keyboard, A to type, + to send
+5. Chat with the AI on your TV!
+6. Press HOME to exit.
 
 ## Troubleshooting
-- **WiFi not connecting**: Reconfigure Wii internet settings and test connection in Wii System Settings.
-- **IP not showing**: Ensure `if_config()` succeeds and Wii is in range of router.
-- **Browser cannot reach Wii**: Confirm iPad and Wii are on same subnet, and router isolation is disabled.
 - **Disc does not boot**: Stock Wii cannot boot burned discs without softmod/modchip + compatible loader.
+- **No picture**: Check TV input and video cable connection.
+- **Controls not working**: Make sure Wii Remote is synced (press SYNC button on both Wii and Remote).
 
 ## Expanding the AI
 Edit `wii/source/ai_brain.c` and add new keyword/response rules in the `rules[]` table, or expand parsing logic for new commands.
 
 ## Technical notes
 - The Wii has limited RAM/CPU compared to modern ML workloads, so this project uses a fast rule-based chatbot design.
-- HTTP is intentionally simple (HTTP/1.0, close per request) for compatibility and memory safety.
-- All server/AI logic runs directly on the Wii CPU—no cloud model required.
+- All logic runs directly on the Wii CPU — no cloud, no internet, no network required.
+- On-screen keyboard uses D-pad navigation for simplicity and reliability.
+- USB keyboard support could be added via libogc USB HID in the future.

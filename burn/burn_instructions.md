@@ -27,9 +27,15 @@ Output: `wii-ai-chatbot.iso` — ready to burn.
 
 1. Insert burned DVD-R into softmodded Wii
 2. Launch via **Priiloader** autoboot or **backup disc loader**
-3. Read the Wii IP address on TV
-4. Open `http://<wii-ip>/` on your iPad/phone
-5. Chat with the AI!
+3. The chatbot appears on your TV immediately
+4. Use the Wii Remote to chat:
+   - **D-pad**: Navigate the on-screen keyboard
+   - **A**: Type the selected letter
+   - **B**: Backspace
+   - **+**: Send message
+   - **HOME**: Exit
+
+**No WiFi. No internet. No phone. Just the disc and your TV.**
 
 ---
 
@@ -70,5 +76,5 @@ Same as the plug-n-play section above.
 ## Troubleshooting
 
 - **Disc does not boot**: Stock Wii cannot boot burned discs without softmod/modchip + compatible loader.
-- **WiFi not connecting**: Reconfigure in Wii Options → Wii Settings → Internet.
-- **Can't reach Wii from browser**: Make sure iPad and Wii are on the same WiFi network.
+- **No picture**: Check TV input/video cable. Try composite if component doesn't work.
+- **Controls unresponsive**: Re-sync the Wii Remote (press SYNC on Wii + Remote).
