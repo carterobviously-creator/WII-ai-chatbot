@@ -1,0 +1,4 @@
+# Build artifacts
+wii/build/
+wii/app.elf
+wii/app.dol

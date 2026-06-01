@@ -1,62 +1,58 @@
-# Burning and Booting WII-AI Chatbot from DVD-R
+# Burning WII-AI Chatbot to DVD-R (Windows)
 
-> Important: a stock unmodified Wii cannot boot burned backup discs directly.
+Everything is pre-built. You just download and burn.
 
-## 1) Requirements
-- Softmodded Nintendo Wii with **Homebrew Channel** and **BootMii** installed
-- Backup-disc capable setup: **Priiloader + backup launcher** or compatible **modchip**
-- Blank **DVD-R** disc (avoid DVD+R when possible)
-- PC for building + burning
-- Burning software: **ImgBurn** (Windows) or **Brasero** (Linux)
-- Wiimms ISO Tools (`wit`)
+## Step 1: Download the ISO
 
-## 2) Build the `.dol`
-From the repository root:
+Go to the [Releases page](../../releases/latest) and download `wii-ai-chatbot.iso`.
 
-```bash
-cd wii
-make
-```
+## Step 2: Get ImgBurn (if you don't have it)
 
-This creates `wii/app.dol`.
+Download free from: https://www.imgburn.com/
 
-## 3) Create a bootable Wii ISO with `wit`
-Create a temporary disc layout:
+## Step 3: Burn the ISO
 
-```bash
-mkdir -p /tmp/wii-ai-disc/sys
-cp wii/app.dol /tmp/wii-ai-disc/sys/main.dol
-```
+1. Open **ImgBurn**
+2. Click **"Write image file to disc"**
+3. Click the folder icon next to "Source" and select `wii-ai-chatbot.iso`
+4. Insert a **blank DVD-R** into your disc drive
+5. Set **Write Speed** to **2x or 4x** (slower = more reliable for Wii)
+6. Click the big burn button
+7. Wait for it to finish and verify
 
-Add valid disc metadata files (`boot.bin`, `bi2.bin`, `apploader.img`) from a legal homebrew-compatible disc template, then build ISO:
+## Step 4: Boot on Wii
 
-```bash
-wit copy /tmp/wii-ai-disc wii-ai-chatbot.iso --dest .
-```
+1. Put the burned disc into your **softmodded Wii**
+2. Launch through **Priiloader** or your **backup disc loader**
+3. The chatbot appears on your TV — ready to go!
 
-Optional verify:
+## Controls
 
-```bash
-wit verify wii-ai-chatbot.iso
-```
+| Button | What it does |
+|--------|-------------|
+| D-pad | Move around the on-screen keyboard |
+| A | Type the highlighted letter |
+| B | Delete / backspace |
+| + | Send your message |
+| HOME | Exit the app |
 
-## 4) Burn ISO to DVD-R (ImgBurn)
-1. Open **ImgBurn** → *Write image file to disc*
-2. Source: `wii-ai-chatbot.iso`
-3. Speed: **2x to 4x**
-4. Enable verify after burn
-5. Start burn
+## Requirements
 
-## 5) Boot on softmodded Wii
-- Insert burned DVD-R
-- Launch through **Priiloader** autoboot path or your installed **backup disc launcher**
-- If your setup supports it, the DOL boots and starts the chat server
+- **Softmodded Wii** (stock Wii cannot boot burned discs)
+- **Blank DVD-R** disc (not DVD+R)
+- **DVD burner** drive in your PC
+- **ImgBurn** (free)
 
-## 6) Network setup
-Before launching, configure Wii WiFi in:
-- Wii Options → Wii Settings → Internet
+## FAQ
 
-## 7) Connect from iPad
-- Read the Wii IP printed on TV (example `192.168.1.45`)
-- On iPad Safari open: `http://<wii-ip>/`
-- Chat with Wii AI from the browser page
+**Q: Do I need to install anything on the Wii?**
+A: You need a softmod (Homebrew Channel + Priiloader or modchip). The chatbot itself just boots from the disc.
+
+**Q: Do I need WiFi?**
+A: No. The chatbot runs 100% offline on the Wii. No internet needed.
+
+**Q: What if the disc doesn't boot?**
+A: Make sure your Wii is softmodded and you're using a backup disc launcher. Stock Wiis block burned discs.
+
+**Q: Can I use DVD+R?**
+A: DVD-R works more reliably with Wii. Avoid DVD+R if possible.

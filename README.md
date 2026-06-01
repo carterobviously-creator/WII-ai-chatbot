@@ -1,84 +1,78 @@
 # WII-AI Chatbot
 
-WII-AI Chatbot is a Nintendo Wii homebrew application that runs a lightweight rule-based chatbot engine locally on Wii hardware and exposes a browser chat UI over WiFi.
+A Nintendo Wii homebrew chatbot that runs directly on your TV. **No WiFi, no internet, no building, no commands.** Just download the ISO, burn it to a DVD-R, and play.
 
-## What this project does
-- Boots as a Wii homebrew app (`app.dol`)
-- Initializes Wii WiFi and prints the Wii IP on TV
-- Runs an HTTP server on port 80
-- Serves a touch-friendly iPad chat UI at `/`
-- Handles `/chat?msg=...` and replies from a rule-based AI brain in C
+## How to use (Windows)
 
-## Hardware requirements
-- Nintendo Wii with softmod / modchip support for backup disc launching
-- DVD-R media for burned disc workflow
-- iPad or phone with modern browser (Safari recommended)
-- WiFi router (Wii + iPad on same network)
+1. **Download** `wii-ai-chatbot.iso` from the [Releases page](../../releases/latest)
+2. **Open ImgBurn** (free: [imgburn.com](https://www.imgburn.com/))
+3. **Select** "Write image file to disc"
+4. **Choose** the downloaded `wii-ai-chatbot.iso`
+5. **Set write speed** to 2x–4x
+6. **Insert** a blank DVD-R and burn
+7. **Put the disc** in your softmodded Wii
+8. **Boot** via Priiloader or backup disc loader
+9. **Chat!** The AI appears on your TV immediately
 
-## Software requirements
-- [devkitPro + devkitPPC + libogc](https://devkitpro.org/)
-- Wiimms ISO Tools (`wit`)
-- ImgBurn (Windows) or Brasero (Linux) for disc burning
+## Controls (Wii Remote)
+
+| Button | Action |
+|--------|--------|
+| D-pad | Navigate on-screen keyboard |
+| A | Type the highlighted letter |
+| B | Backspace / delete |
+| + | Send your message |
+| HOME | Exit |
+
+## What you need
+
+- Nintendo Wii with softmod or modchip (to boot burned discs)
+- Blank DVD-R disc
+- Wii Remote
+- TV
+- [ImgBurn](https://www.imgburn.com/) on Windows (to burn the ISO)
+
+## What this does
+
+- Boots from the burned disc — no setup, no WiFi
+- Shows a chat interface on your TV
+- You type with the on-screen keyboard using the Wii Remote D-pad
+- AI responds instantly — everything runs on the Wii CPU
+- Rule-based chatbot with jokes, math, Wii facts, and more
+
+## Expanding the AI
+
+Edit `wii/source/ai_brain.c` and add new keyword/response rules in the `rules[]` table. Push to main and GitHub Actions will auto-build a new ISO in Releases.
 
 ## Project layout
 
 ```
 WII-ai-chatbot/
+├── .github/workflows/    ← Auto-builds the ISO (you never run this)
 ├── wii/
 │   ├── source/
-│   │   ├── main.c
-│   │   ├── http_server.c
-│   │   ├── http_server.h
-│   │   ├── ai_brain.c
-│   │   ├── ai_brain.h
-│   │   └── chat_page.h
+│   │   ├── main.c       ← Entry point
+│   │   ├── tv_chat.c    ← TV chat display
+│   │   ├── keyboard.c   ← On-screen keyboard
+│   │   ├── ai_brain.c   ← AI response engine
+│   │   └── *.h          ← Headers
 │   ├── Makefile
 │   └── meta.xml
-├── ipad/
-│   └── index.html
 ├── burn/
 │   └── burn_instructions.md
 └── README.md
 ```
 
-## Build instructions
-1. Install devkitPro and Wii packages.
-2. Set environment:
-   - `DEVKITPRO`
-   - `DEVKITPPC`
-3. Build:
-
-```bash
-cd wii
-make
-```
-
-Output: `wii/app.dol`
-
-## Burn to disc
-See [burn/burn_instructions.md](burn/burn_instructions.md) for full workflow:
-- Build `app.dol`
-- Create Wii ISO with `wit`
-- Burn to DVD-R at low speed (2x–4x)
-- Launch with Priiloader / backup launcher
-
-## Boot and use
-1. Boot the app from your homebrew/backup-disc launcher.
-2. Wait for TV output showing the Wii IP address.
-3. Open `http://<wii-ip>/` on iPad Safari.
-4. Start chatting.
-5. Press Wii Remote HOME to exit.
-
 ## Troubleshooting
-- **WiFi not connecting**: Reconfigure Wii internet settings and test connection in Wii System Settings.
-- **IP not showing**: Ensure `if_config()` succeeds and Wii is in range of router.
-- **Browser cannot reach Wii**: Confirm iPad and Wii are on same subnet, and router isolation is disabled.
-- **Disc does not boot**: Stock Wii cannot boot burned discs without softmod/modchip + compatible loader.
 
-## Expanding the AI
-Edit `wii/source/ai_brain.c` and add new keyword/response rules in the `rules[]` table, or expand parsing logic for new commands.
+- **Disc does not boot**: Stock Wii cannot boot burned discs — you need a softmod or modchip + backup loader.
+- **No picture**: Check TV input and video cable.
+- **Controls not working**: Re-sync Wii Remote (press SYNC on both Wii and Remote).
+- **ISO not in Releases**: Push code to `main` branch or create a tag like `v1.0` to trigger a build.
 
 ## Technical notes
-- The Wii has limited RAM/CPU compared to modern ML workloads, so this project uses a fast rule-based chatbot design.
-- HTTP is intentionally simple (HTTP/1.0, close per request) for compatibility and memory safety.
-- All server/AI logic runs directly on the Wii CPU—no cloud model required.
+
+- Rule-based AI designed for Wii's limited 88MB RAM / 729MHz CPU
+- All logic runs on the Wii — zero network, zero cloud
+- GitHub Actions automatically compiles and packages the ISO on every push
+- You never need to install any dev tools — just download and burn

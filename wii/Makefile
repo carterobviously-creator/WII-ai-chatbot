@@ -1,4 +1,7 @@
 # Wii homebrew Makefile for devkitPPC/libogc
+# NOTE: You don't need to run this yourself.
+# GitHub Actions builds the ISO automatically.
+# Just download from Releases and burn to DVD-R.
 
 ifneq ($(strip $(DEVKITPPC)),)
 include $(DEVKITPPC)/wii_rules
@@ -13,10 +16,10 @@ INCLUDES := source
 
 OUTPUT := $(CURDIR)/$(TARGET)
 
-CFILES := $(notdir $(wildcard $(SOURCES)/*.c))
+CFILES := main.c ai_brain.c keyboard.c tv_chat.c
 OFILES := $(addprefix $(BUILD)/,$(CFILES:.c=.o))
 
-LIBS := -lwiiuse -logi -lasnd -lbte -logc -lm
+LIBS := -lwiiuse -lbte -logc -lm
 INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) -I$(LIBOGC_INC)
 
 CFLAGS := -g -O2 -Wall $(MACHDEP) $(INCLUDE)
@@ -40,6 +43,3 @@ $(OUTPUT).dol: $(OUTPUT).elf
 
 clean:
 	rm -rf $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
-
-# To wrap app.dol into a bootable ISO with Wiimms ISO Tools (wit),
-# create a Wii disc layout and use: wit copy <disc-folder> wii-ai-chatbot.iso
