@@ -33,7 +33,7 @@ static void url_decode(const char* in, char* out, size_t out_size)
     if (!out_size) return;
 
     while (in[i] != '\0' && j + 1 < out_size) {
-        if (in[i] == '+' ) {
+        if (in[i] == '+') {
             out[j++] = ' ';
             ++i;
         } else if (in[i] == '%' && in[i + 1] && in[i + 2]) {

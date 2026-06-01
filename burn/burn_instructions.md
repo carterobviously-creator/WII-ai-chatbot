@@ -1,5 +1,7 @@
 # Burning and Booting WII-AI Chatbot from DVD-R
 
+> Important: a stock unmodified Wii cannot boot burned backup discs directly.
+
 ## 1) Requirements
 - Softmodded Nintendo Wii with **Homebrew Channel** and **BootMii** installed
 - Backup-disc capable setup: **Priiloader + backup launcher** or compatible **modchip**
@@ -7,8 +9,6 @@
 - PC for building + burning
 - Burning software: **ImgBurn** (Windows) or **Brasero** (Linux)
 - Wiimms ISO Tools (`wit`)
-
-> Important: a stock unmodified Wii cannot boot burned backup discs directly.
 
 ## 2) Build the `.dol`
 From the repository root:
