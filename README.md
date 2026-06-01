@@ -1,50 +1,61 @@
 # WII-AI Chatbot
 
-WII-AI Chatbot is a Nintendo Wii homebrew application that runs a lightweight rule-based chatbot directly on your TV. **No WiFi, no internet, no phone required** — just burn the disc and go.
+A Nintendo Wii homebrew chatbot that runs directly on your TV. **No WiFi, no internet, no building, no commands.** Just download the ISO, burn it to a DVD-R, and play.
 
-## What this project does
-- Boots as a Wii homebrew app (`app.dol`) from a burned DVD-R
-- Displays a chat interface directly on your TV
-- Uses an on-screen keyboard controlled by the Wii Remote D-pad
-- AI chatbot responds instantly — everything runs locally on the Wii CPU
-- **Plug and play**: burn disc → insert → boot → chat
+## How to use (Windows)
 
-## How it works
-1. Burn the ISO to a DVD-R
-2. Put the disc in your softmodded Wii
-3. Boot it
-4. Chat on your TV using the Wii Remote:
-   - **D-pad**: Move cursor on the on-screen keyboard
-   - **A button**: Type the highlighted letter
-   - **B button**: Backspace/delete
-   - **+ button**: Send your message
-   - **HOME**: Exit
+1. **Download** `wii-ai-chatbot.iso` from the [Releases page](../../releases/latest)
+2. **Open ImgBurn** (free: [imgburn.com](https://www.imgburn.com/))
+3. **Select** "Write image file to disc"
+4. **Choose** the downloaded `wii-ai-chatbot.iso`
+5. **Set write speed** to 2x–4x
+6. **Insert** a blank DVD-R and burn
+7. **Put the disc** in your softmodded Wii
+8. **Boot** via Priiloader or backup disc loader
+9. **Chat!** The AI appears on your TV immediately
 
-## Hardware requirements
-- Nintendo Wii with softmod / modchip for backup disc launching
-- DVD-R media for burned disc
+## Controls (Wii Remote)
+
+| Button | Action |
+|--------|--------|
+| D-pad | Navigate on-screen keyboard |
+| A | Type the highlighted letter |
+| B | Backspace / delete |
+| + | Send your message |
+| HOME | Exit |
+
+## What you need
+
+- Nintendo Wii with softmod or modchip (to boot burned discs)
+- Blank DVD-R disc
 - Wii Remote
-- TV (any TV the Wii supports)
+- TV
+- [ImgBurn](https://www.imgburn.com/) on Windows (to burn the ISO)
 
-## Software requirements (for building)
-- [devkitPro + devkitPPC + libogc](https://devkitpro.org/)
-- Wiimms ISO Tools (`wit`)
-- ImgBurn (Windows) or Brasero (Linux) for disc burning
+## What this does
+
+- Boots from the burned disc — no setup, no WiFi
+- Shows a chat interface on your TV
+- You type with the on-screen keyboard using the Wii Remote D-pad
+- AI responds instantly — everything runs on the Wii CPU
+- Rule-based chatbot with jokes, math, Wii facts, and more
+
+## Expanding the AI
+
+Edit `wii/source/ai_brain.c` and add new keyword/response rules in the `rules[]` table. Push to main and GitHub Actions will auto-build a new ISO in Releases.
 
 ## Project layout
 
 ```
 WII-ai-chatbot/
-├── build_iso.sh          ← ONE-COMMAND plug-n-play builder
+├── .github/workflows/    ← Auto-builds the ISO (you never run this)
 ├── wii/
 │   ├── source/
-│   │   ├── main.c           ← Entry point (no network)
-│   │   ├── tv_chat.c        ← TV chat display loop
-│   │   ├── tv_chat.h
-│   │   ├── keyboard.c       ← On-screen keyboard (D-pad)
-│   │   ├── keyboard.h
-│   │   ├── ai_brain.c       ← Rule-based AI engine
-│   │   └── ai_brain.h
+│   │   ├── main.c       ← Entry point
+│   │   ├── tv_chat.c    ← TV chat display
+│   │   ├── keyboard.c   ← On-screen keyboard
+│   │   ├── ai_brain.c   ← AI response engine
+│   │   └── *.h          ← Headers
 │   ├── Makefile
 │   └── meta.xml
 ├── burn/
@@ -52,62 +63,16 @@ WII-ai-chatbot/
 └── README.md
 ```
 
-## Build instructions
-1. Install devkitPro and Wii packages.
-2. Set environment:
-   - `DEVKITPRO`
-   - `DEVKITPPC`
-3. Build:
-
-```bash
-cd wii
-make
-```
-
-Output: `wii/app.dol`
-
-## Plug-n-Play: Build & Burn (one command)
-
-The easiest way to go from source to a bootable disc:
-
-```bash
-./build_iso.sh
-```
-
-This single script:
-1. Builds the Wii app
-2. Generates all required disc metadata (boot.bin, bi2.bin, apploader)
-3. Packages into a ready-to-burn Wii ISO
-
-Then just burn `wii-ai-chatbot.iso` to a DVD-R at 2x–4x speed and boot on your softmodded Wii.
-
-See [burn/burn_instructions.md](burn/burn_instructions.md) for full details.
-
-## Burn to disc (manual)
-See [burn/burn_instructions.md](burn/burn_instructions.md) for the manual workflow:
-- Build `app.dol`
-- Create Wii ISO with `wit`
-- Burn to DVD-R at low speed (2x–4x)
-- Launch with Priiloader / backup launcher
-
-## Boot and use
-1. Burn the ISO to DVD-R (see build instructions above)
-2. Insert disc into softmodded Wii
-3. Boot via Priiloader or backup disc launcher
-4. Use D-pad to navigate keyboard, A to type, + to send
-5. Chat with the AI on your TV!
-6. Press HOME to exit.
-
 ## Troubleshooting
-- **Disc does not boot**: Stock Wii cannot boot burned discs without softmod/modchip + compatible loader.
-- **No picture**: Check TV input and video cable connection.
-- **Controls not working**: Make sure Wii Remote is synced (press SYNC button on both Wii and Remote).
 
-## Expanding the AI
-Edit `wii/source/ai_brain.c` and add new keyword/response rules in the `rules[]` table, or expand parsing logic for new commands.
+- **Disc does not boot**: Stock Wii cannot boot burned discs — you need a softmod or modchip + backup loader.
+- **No picture**: Check TV input and video cable.
+- **Controls not working**: Re-sync Wii Remote (press SYNC on both Wii and Remote).
+- **ISO not in Releases**: Push code to `main` branch or create a tag like `v1.0` to trigger a build.
 
 ## Technical notes
-- The Wii has limited RAM/CPU compared to modern ML workloads, so this project uses a fast rule-based chatbot design.
-- All logic runs directly on the Wii CPU — no cloud, no internet, no network required.
-- On-screen keyboard uses D-pad navigation for simplicity and reliability.
-- USB keyboard support could be added via libogc USB HID in the future.
+
+- Rule-based AI designed for Wii's limited 88MB RAM / 729MHz CPU
+- All logic runs on the Wii — zero network, zero cloud
+- GitHub Actions automatically compiles and packages the ISO on every push
+- You never need to install any dev tools — just download and burn

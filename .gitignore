@@ -2,7 +2,3 @@
 wii/build/
 wii/app.elf
 wii/app.dol
-
-# Generated ISO
-wii-ai-chatbot.iso
-*.iso
