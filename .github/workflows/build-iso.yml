@@ -1,4 +1,4 @@
-name: Build Wii Homebrew Package
+name: Build WII-AI Chatbot ISO
 
 on:
   push:
@@ -12,12 +12,34 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: devkitpro/devkitppc:latest
 
     steps:
+      # ── 1. Checkout ───────────────────────────────────────────────────────
       - uses: actions/checkout@v4
 
+      # ── 2. Install build tools ────────────────────────────────────────────
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            genisoimage \
+            wget \
+            ca-certificates
+
+      # ── 3. Install devkitPPC toolchain ────────────────────────────────────
+      - name: Install devkitPro keyring & repo
+        run: |
+          wget -q https://apt.devkitpro.org/install-devkitpro-pacman
+          chmod +x install-devkitpro-pacman
+          sudo bash install-devkitpro-pacman <<< $'\n'
+
+      - name: Install devkitPPC + libogc
+        run: |
+          sudo dkp-pacman -Sy --noconfirm wii-dev
+        env:
+          DEVKITPRO: /opt/devkitpro
+
+      # ── 4. Build the Wii DOL ──────────────────────────────────────────────
       - name: Build DOL
         run: |
           cd wii
@@ -26,56 +48,75 @@ jobs:
           DEVKITPRO: /opt/devkitpro
           DEVKITPPC: /opt/devkitpro/devkitPPC
 
-      - name: Package as Homebrew Channel app
+      # ── 5. Download the ~35M AI model ─────────────────────────────────────
+      #   SmolLM-135M at Q2_K quantisation ≈ 35 MB on disc.
+      #   Swap MODEL_URL for any other GGUF you prefer.
+      - name: Download AI model
+        env:
+          MODEL_URL: https://huggingface.co/ggml-org/SmolLM-135M-Instruct-v0.2-Q2_K-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q2_K.gguf
         run: |
-          rm -rf dist
-          mkdir -p dist/apps/wii-ai-chatbot
+          mkdir -p iso_root
+          echo "Downloading model…"
+          wget -q --show-progress -O iso_root/model.gguf "$MODEL_URL"
+          SIZE=$(du -sh iso_root/model.gguf | cut -f1)
+          echo "Model downloaded: $SIZE"
 
-          # Current Makefile target emits app.dol. Keep boot.dol fallback for compatibility.
-          if [ -f wii/boot.dol ]; then
-            cp wii/boot.dol dist/apps/wii-ai-chatbot/boot.dol
-          elif [ -f wii/app.dol ]; then
-            cp wii/app.dol dist/apps/wii-ai-chatbot/boot.dol
+      # ── 6. Assemble ISO root directory ────────────────────────────────────
+      - name: Assemble disc contents
+        run: |
+          if [ -f wii/app.dol ]; then
+            cp wii/app.dol iso_root/boot.dol
+          elif [ -f wii/boot.dol ]; then
+            cp wii/boot.dol iso_root/boot.dol
           else
-            echo "No DOL output found. Expected wii/boot.dol or wii/app.dol."
+            echo "ERROR: no .dol found after build."
             exit 1
           fi
+          echo "Disc contents:"
+          ls -lh iso_root/
 
-          cp wii/meta.xml dist/apps/wii-ai-chatbot/meta.xml
-          (cd dist && zip -r ../wii-ai-chatbot-sd.zip apps)
+      # ── 7. Build the ISO image ────────────────────────────────────────────
+      - name: Create ISO
+        run: |
+          genisoimage \
+            -o wii-ai-chatbot.iso \
+            -V "WII_AI_CHATBOT" \
+            -iso-level 2 \
+            -r \
+            iso_root/
+          echo "ISO size: $(du -sh wii-ai-chatbot.iso | cut -f1)"
 
-      - name: Upload SD package artifact
+      # ── 8. Upload ISO as workflow artifact ────────────────────────────────
+      - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wii-ai-chatbot-sd
-          path: wii-ai-chatbot-sd.zip
+          name: wii-ai-chatbot-iso
+          path: wii-ai-chatbot.iso
 
+      # ── 9. Publish to Releases on tag ─────────────────────────────────────
       - name: Create Release (on tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: wii-ai-chatbot-sd.zip
+          files: wii-ai-chatbot.iso
           body: |
-            ## WII-AI Chatbot — Homebrew Channel Package
+            ## WII-AI Chatbot — CD-ROM Image
+            The AI model is baked in. Just burn and boot.
+            1. Download `wii-ai-chatbot.iso`
+            2. ImgBurn → Write image file to disc
+            3. Blank CD-R, speed 4x, burn
 
-            1. Download `wii-ai-chatbot-sd.zip`
-            2. Extract the zip to the root of your SD card (it already contains `apps/wii-ai-chatbot/`)
-            3. Insert SD card into your Wii
-            4. Open Homebrew Channel
-            5. Launch **WII-AI Chatbot**
-
+      # ── 10. Rolling "latest" release on every main push ───────────────────
       - name: Create latest release (on main push)
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: latest
           prerelease: true
-          files: wii-ai-chatbot-sd.zip
+          files: wii-ai-chatbot.iso
           body: |
-            ## Latest Build — WII-AI Chatbot (Homebrew Channel)
-
-            1. Download `wii-ai-chatbot-sd.zip`
-            2. Extract the zip to the root of your SD card (it already contains `apps/wii-ai-chatbot/`)
-            3. Insert SD card into your Wii
-            4. Open Homebrew Channel
-            5. Launch **WII-AI Chatbot**
+            ## Latest Build — WII-AI Chatbot (CD-ROM)
+            The AI model is baked in. Just burn and boot.
+            1. Download `wii-ai-chatbot.iso`
+            2. ImgBurn → Write image file to disc
+            3. Blank CD-R, speed 4x, burn
