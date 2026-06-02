@@ -44,7 +44,7 @@ $(OUTPUT).elf: $(OFILES)
 	$(CC) $(OFILES) $(LDFLAGS) -o $@
 
 $(OUTPUT).dol: $(OUTPUT).elf
-	$(ELF2DOL) $< $@
+	elf2dol $< $@
 
 clean:
 	rm -rf $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
