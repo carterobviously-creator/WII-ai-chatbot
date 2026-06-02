@@ -23,6 +23,12 @@ jobs:
           cp wit-v3.05a-r8638-x86_64/bin/wit /usr/local/bin/
           rm -rf wit.tar.gz wit-v3.05a-r8638-x86_64
 
+      - name: Install Wii build libraries
+        run: |
+          dkp-pacman -Sy --noconfirm
+          # libogc provides the ogc, wiiuse, and bte libraries used by the linker.
+          dkp-pacman -S --needed --noconfirm libogc
+
       - name: Build app.dol
         run: |
           cd wii
