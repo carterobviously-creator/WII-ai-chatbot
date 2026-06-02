@@ -1,6 +1,8 @@
 # Wii homebrew Makefile for devkitPPC/libogc
 # NOTE: GitHub Actions builds the Homebrew Channel package automatically.
 
+# Default devkitPro paths; override these with environment variables if your
+# local toolchain lives somewhere else.
 DEVKITPRO ?= /opt/devkitpro
 DEVKITPPC ?= $(DEVKITPRO)/devkitPPC
 LIBOGC ?= $(DEVKITPRO)/libogc
