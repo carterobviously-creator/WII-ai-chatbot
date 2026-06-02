@@ -1,7 +1,11 @@
 # Wii homebrew Makefile for devkitPPC/libogc
-# NOTE: You don't need to run this yourself.
-# GitHub Actions builds the ISO automatically.
-# Just download from Releases and burn to DVD-R.
+# NOTE: GitHub Actions builds the Homebrew Channel package automatically.
+
+DEVKITPRO ?= /opt/devkitpro
+DEVKITPPC ?= $(DEVKITPRO)/devkitPPC
+LIBOGC ?= $(DEVKITPRO)/libogc
+LIBOGC_INC ?= $(LIBOGC)/include
+LIBOGC_LIB ?= $(LIBOGC)/lib/wii
 
 ifneq ($(strip $(DEVKITPPC)),)
 include $(DEVKITPPC)/wii_rules
@@ -21,9 +25,10 @@ OFILES := $(addprefix $(BUILD)/,$(CFILES:.c=.o))
 
 LIBS := -lwiiuse -lbte -logc -lm
 INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) -I$(LIBOGC_INC)
+EXTRA_LIBPATHS := -L$(LIBOGC_LIB)
 
 CFLAGS := -g -O2 -Wall $(MACHDEP) $(INCLUDE)
-LDFLAGS := -g $(MACHDEP) $(LIBPATHS) $(LIBS)
+LDFLAGS := -g $(MACHDEP) $(EXTRA_LIBPATHS) $(LIBPATHS) $(LIBS)
 
 .PHONY: all clean
 
