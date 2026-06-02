@@ -10,22 +10,15 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  # ── Job 1: compile the Wii DOL inside the devkitPPC container ─────────────
+  build-dol:
     runs-on: ubuntu-latest
     container:
       image: devkitpro/devkitppc:latest
 
     steps:
-      # ── 1. Checkout ───────────────────────────────────────────────────────
       - uses: actions/checkout@v4
 
-      # ── 2. Install genisoimage + wget (toolchain already in container) ────
-      - name: Install genisoimage and wget
-        run: |
-          apt-get update -y
-          apt-get install -y genisoimage wget ca-certificates
-
-      # ── 3. Build the Wii DOL ──────────────────────────────────────────────
       - name: Build DOL
         run: |
           cd wii
@@ -34,28 +27,51 @@ jobs:
           DEVKITPRO: /opt/devkitpro
           DEVKITPPC: /opt/devkitpro/devkitPPC
 
-      # ── 4. Download the ~35M AI model ─────────────────────────────────────
+      - name: Upload DOL artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wii-dol
+          path: |
+            wii/app.dol
+            wii/boot.dol
+          if-no-files-found: error
+
+  # ── Job 2: download model, build ISO, publish release ─────────────────────
+  build-iso:
+    needs: build-dol
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install genisoimage
+        run: sudo apt-get update -y && sudo apt-get install -y genisoimage
+
+      - name: Download DOL artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wii-dol
+          path: wii-dol
+
       - name: Download AI model
         run: |
           mkdir -p iso_root
-          wget -q -O iso_root/model.gguf \
+          wget -q --show-progress -O iso_root/model.gguf \
             "https://huggingface.co/ggml-org/SmolLM-135M-Instruct-v0.2-Q2_K-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q2_K.gguf"
           echo "Model size: $(du -sh iso_root/model.gguf | cut -f1)"
 
-      # ── 5. Assemble ISO root ──────────────────────────────────────────────
       - name: Assemble disc contents
         run: |
-          if [ -f wii/app.dol ]; then
-            cp wii/app.dol iso_root/boot.dol
-          elif [ -f wii/boot.dol ]; then
-            cp wii/boot.dol iso_root/boot.dol
+          if [ -f wii-dol/app.dol ]; then
+            cp wii-dol/app.dol iso_root/boot.dol
+          elif [ -f wii-dol/boot.dol ]; then
+            cp wii-dol/boot.dol iso_root/boot.dol
           else
-            echo "ERROR: no .dol found after build."
+            echo "ERROR: no .dol found."
             exit 1
           fi
           ls -lh iso_root/
 
-      # ── 6. Build the ISO ──────────────────────────────────────────────────
       - name: Create ISO
         run: |
           genisoimage \
@@ -66,14 +82,12 @@ jobs:
             iso_root/
           echo "ISO size: $(du -sh wii-ai-chatbot.iso | cut -f1)"
 
-      # ── 7. Upload artifact ────────────────────────────────────────────────
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
         with:
           name: wii-ai-chatbot-iso
           path: wii-ai-chatbot.iso
 
-      # ── 8. Release on tag ─────────────────────────────────────────────────
       - name: Create Release (on tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
@@ -81,9 +95,8 @@ jobs:
           files: wii-ai-chatbot.iso
           body: |
             ## WII-AI Chatbot — CD-ROM Image
-            AI model baked in. Just burn to a CD-R and boot.
+            AI model baked in. Burn to CD-R and boot.
 
-      # ── 9. Rolling latest release on main push ────────────────────────────
       - name: Create latest release (on main push)
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
@@ -93,4 +106,4 @@ jobs:
           files: wii-ai-chatbot.iso
           body: |
             ## Latest Build — WII-AI Chatbot (CD-ROM)
-            AI model baked in. Just burn to a CD-R and boot.
+            AI model baked in. Burn to CD-R and boot.
