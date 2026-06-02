@@ -28,6 +28,7 @@ jobs:
           rm -rf dist
           mkdir -p dist/apps/wii-ai-chatbot
 
+          # Current Makefile target emits app.dol. Keep boot.dol fallback for compatibility.
           if [ -f wii/boot.dol ]; then
             cp wii/boot.dol dist/apps/wii-ai-chatbot/boot.dol
           elif [ -f wii/app.dol ]; then
