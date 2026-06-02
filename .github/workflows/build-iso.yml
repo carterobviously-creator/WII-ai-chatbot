@@ -18,7 +18,6 @@ jobs:
       - name: Build DOL
         run: |
           cd wii
-          make clean
           make
         env:
           DEVKITPRO: /opt/devkitpro
@@ -34,7 +33,7 @@ jobs:
           elif [ -f wii/app.dol ]; then
             cp wii/app.dol dist/apps/wii-ai-chatbot/boot.dol
           else
-            echo "No DOL output found (expected wii/boot.dol or wii/app.dol)."
+            echo "No DOL output found. Expected wii/boot.dol or wii/app.dol."
             exit 1
           fi
 
@@ -56,7 +55,7 @@ jobs:
             ## WII-AI Chatbot — Homebrew Channel Package
 
             1. Download `wii-ai-chatbot-sd.zip`
-            2. Extract it to the root of your SD card (`SD:/apps/wii-ai-chatbot/`)
+            2. Extract the zip to the root of your SD card (it already contains `apps/wii-ai-chatbot/`)
             3. Insert SD card into your Wii
             4. Open Homebrew Channel
             5. Launch **WII-AI Chatbot**
@@ -72,7 +71,7 @@ jobs:
             ## Latest Build — WII-AI Chatbot (Homebrew Channel)
 
             1. Download `wii-ai-chatbot-sd.zip`
-            2. Extract it to the root of your SD card (`SD:/apps/wii-ai-chatbot/`)
+            2. Extract the zip to the root of your SD card (it already contains `apps/wii-ai-chatbot/`)
             3. Insert SD card into your Wii
             4. Open Homebrew Channel
             5. Launch **WII-AI Chatbot**
