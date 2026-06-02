@@ -56,7 +56,9 @@ jobs:
       - name: Download AI model
         run: |
           mkdir -p iso_root
-          wget -q --show-progress -O iso_root/model.gguf \
+          curl -fL \
+            -H "User-Agent: Mozilla/5.0" \
+            -o iso_root/model.gguf \
             "https://huggingface.co/ggml-org/SmolLM-135M-Instruct-v0.2-Q2_K-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q2_K.gguf"
           echo "Model size: $(du -sh iso_root/model.gguf | cut -f1)"
 
