@@ -25,8 +25,9 @@ jobs:
 
       - name: Install Wii build libraries
         run: |
-          dkp-pacman -Syu --noconfirm
-          dkp-pacman -S --noconfirm libogc
+          dkp-pacman -Sy --noconfirm
+          # libogc provides the ogc, wiiuse, and bte libraries used by the linker.
+          dkp-pacman -S --needed --noconfirm libogc
 
       - name: Build app.dol
         run: |
