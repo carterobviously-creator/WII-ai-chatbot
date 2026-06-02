@@ -1,7 +1,13 @@
 # Wii homebrew Makefile for devkitPPC/libogc
-# NOTE: You don't need to run this yourself.
-# GitHub Actions builds the ISO automatically.
-# Just download from Releases and burn to DVD-R.
+# NOTE: GitHub Actions builds the Homebrew Channel package automatically.
+
+# Default devkitPro paths; override these with environment variables if your
+# local toolchain lives somewhere else.
+DEVKITPRO ?= /opt/devkitpro
+DEVKITPPC ?= $(DEVKITPRO)/devkitPPC
+LIBOGC ?= $(DEVKITPRO)/libogc
+LIBOGC_INC ?= $(LIBOGC)/include
+LIBOGC_LIB ?= $(LIBOGC)/lib/wii
 
 ifneq ($(strip $(DEVKITPPC)),)
 include $(DEVKITPPC)/wii_rules
@@ -21,9 +27,10 @@ OFILES := $(addprefix $(BUILD)/,$(CFILES:.c=.o))
 
 LIBS := -lwiiuse -lbte -logc -lm
 INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) -I$(LIBOGC_INC)
+LIBOGC_LIBPATH := -L$(LIBOGC_LIB)
 
 CFLAGS := -g -O2 -Wall $(MACHDEP) $(INCLUDE)
-LDFLAGS := -g $(MACHDEP) $(LIBPATHS) $(LIBS)
+LDFLAGS := -g $(MACHDEP) $(LIBOGC_LIBPATH) $(LIBPATHS) $(LIBS)
 
 .PHONY: all clean
 
@@ -39,7 +46,7 @@ $(OUTPUT).elf: $(OFILES)
 	$(CC) $(OFILES) $(LDFLAGS) -o $@
 
 $(OUTPUT).dol: $(OUTPUT).elf
-	$(ELF2DOL) $< $@
+	elf2dol $< $@
 
 clean:
 	rm -rf $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
