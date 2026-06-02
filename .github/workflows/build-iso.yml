@@ -44,8 +44,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install genisoimage
-        run: sudo apt-get update -y && sudo apt-get install -y genisoimage
+      - name: Install tools
+        run: sudo apt-get update -y && sudo apt-get install -y genisoimage curl
 
       - name: Download DOL artifact
         uses: actions/download-artifact@v4
@@ -53,14 +53,139 @@ jobs:
           name: wii-dol
           path: wii-dol
 
-      - name: Download AI model
+      - name: Download AI model (with many fallbacks)
         run: |
           mkdir -p iso_root
-          curl -fL \
-            -H "User-Agent: Mozilla/5.0" \
-            -o iso_root/model.gguf \
-            "https://huggingface.co/ggml-org/SmolLM-135M-Instruct-v0.2-Q2_K-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q2_K.gguf"
-          echo "Model size: $(du -sh iso_root/model.gguf | cut -f1)"
+
+          # List of public GGUF model URLs to try in order.
+          # Tries each one until a file > 1 MB is downloaded successfully.
+          URLS=(
+            "https://huggingface.co/ggml-org/SmolLM-135M-GGUF/resolve/main/SmolLM-135M-Q8_0.gguf"
+            "https://huggingface.co/ggml-org/SmolLM-135M-GGUF/resolve/main/SmolLM-135M-Q4_K_M.gguf"
+            "https://huggingface.co/ggml-org/SmolLM-135M-GGUF/resolve/main/SmolLM-135M-Q4_0.gguf"
+            "https://huggingface.co/ggml-org/SmolLM-135M-GGUF/resolve/main/SmolLM-135M-Q2_K.gguf"
+            "https://huggingface.co/afrideva/smollm-135M-GGUF/resolve/main/smollm-135m.q8_0.gguf"
+            "https://huggingface.co/afrideva/smollm-135M-GGUF/resolve/main/smollm-135m.q4_k_m.gguf"
+            "https://huggingface.co/afrideva/smollm-135M-GGUF/resolve/main/smollm-135m.q4_0.gguf"
+            "https://huggingface.co/afrideva/smollm-135M-GGUF/resolve/main/smollm-135m.q2_k.gguf"
+            "https://huggingface.co/afrideva/smollm-135M-GGUF/resolve/main/smollm-135m.f16.gguf"
+            "https://huggingface.co/ggml-org/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M-Q8_0.gguf"
+            "https://huggingface.co/ggml-org/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M-Q4_K_M.gguf"
+            "https://huggingface.co/ggml-org/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M-Q4_0.gguf"
+            "https://huggingface.co/ggml-org/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M-Q2_K.gguf"
+            "https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF/resolve/main/qwen2-0_5b-instruct-q4_k_m.gguf"
+            "https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF/resolve/main/qwen2-0_5b-instruct-q2_k.gguf"
+            "https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF/resolve/main/qwen2-0_5b-instruct-q4_0.gguf"
+            "https://huggingface.co/Qwen/Qwen2-0.5B-Instruct-GGUF/resolve/main/qwen2-0_5b-instruct-q8_0.gguf"
+            "https://huggingface.co/microsoft/phi-1_5/resolve/main/model.gguf"
+            "https://huggingface.co/afrideva/phi-1_5-GGUF/resolve/main/phi-1_5.q2_k.gguf"
+            "https://huggingface.co/afrideva/phi-1_5-GGUF/resolve/main/phi-1_5.q4_k_m.gguf"
+            "https://huggingface.co/afrideva/phi-1_5-GGUF/resolve/main/phi-1_5.q4_0.gguf"
+            "https://huggingface.co/TheBloke/phi-1_5-GGUF/resolve/main/phi-1_5.Q2_K.gguf"
+            "https://huggingface.co/TheBloke/phi-1_5-GGUF/resolve/main/phi-1_5.Q4_K_M.gguf"
+            "https://huggingface.co/TheBloke/phi-1_5-GGUF/resolve/main/phi-1_5.Q4_0.gguf"
+            "https://huggingface.co/afrideva/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.q2_k.gguf"
+            "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q2_K.gguf"
+            "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+            "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_0.gguf"
+            "https://huggingface.co/mlx-community/SmolLM-135M-GGUF/resolve/main/SmolLM-135M-Q4_K_M.gguf"
+            "https://huggingface.co/mlx-community/SmolLM-135M-GGUF/resolve/main/SmolLM-135M-Q8_0.gguf"
+            "https://huggingface.co/unsloth/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q4_K_M.gguf"
+            "https://huggingface.co/unsloth/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf"
+            "https://huggingface.co/unsloth/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q2_K.gguf"
+            "https://huggingface.co/unsloth/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M-Q4_K_M.gguf"
+            "https://huggingface.co/unsloth/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M-Q8_0.gguf"
+            "https://huggingface.co/unsloth/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M-Q2_K.gguf"
+            "https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q4_K_M.gguf"
+            "https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf"
+            "https://huggingface.co/bartowski/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q2_K.gguf"
+            "https://huggingface.co/bartowski/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q4_K_M.gguf"
+            "https://huggingface.co/bartowski/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q8_0.gguf"
+            "https://huggingface.co/bartowski/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q2_K.gguf"
+            "https://huggingface.co/second-state/Qwen2-0.5B-Instruct-GGUF/resolve/main/Qwen2-0.5B-Instruct-Q4_K_M.gguf"
+            "https://huggingface.co/second-state/Qwen2-0.5B-Instruct-GGUF/resolve/main/Qwen2-0.5B-Instruct-Q2_K.gguf"
+            "https://huggingface.co/second-state/SmolLM-135M-Instruct-GGUF/resolve/main/SmolLM-135M-Instruct-Q4_K_M.gguf"
+            "https://huggingface.co/second-state/SmolLM-135M-Instruct-GGUF/resolve/main/SmolLM-135M-Instruct-Q8_0.gguf"
+            "https://huggingface.co/second-state/SmolLM-135M-Instruct-GGUF/resolve/main/SmolLM-135M-Instruct-Q2_K.gguf"
+            "https://huggingface.co/QuantFactory/SmolLM-135M-GGUF/resolve/main/SmolLM-135M.Q4_K_M.gguf"
+            "https://huggingface.co/QuantFactory/SmolLM-135M-GGUF/resolve/main/SmolLM-135M.Q8_0.gguf"
+            "https://huggingface.co/QuantFactory/SmolLM-135M-GGUF/resolve/main/SmolLM-135M.Q2_K.gguf"
+            "https://huggingface.co/QuantFactory/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M.Q4_K_M.gguf"
+            "https://huggingface.co/QuantFactory/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M.Q8_0.gguf"
+            "https://huggingface.co/QuantFactory/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M.Q2_K.gguf"
+            "https://huggingface.co/QuantFactory/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2.Q4_K_M.gguf"
+            "https://huggingface.co/QuantFactory/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2.Q8_0.gguf"
+            "https://huggingface.co/QuantFactory/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2.Q2_K.gguf"
+            "https://huggingface.co/QuantFactory/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct.Q4_K_M.gguf"
+            "https://huggingface.co/QuantFactory/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct.Q8_0.gguf"
+            "https://huggingface.co/QuantFactory/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct.Q2_K.gguf"
+            "https://huggingface.co/QuantFactory/Qwen2-0.5B-Instruct-GGUF/resolve/main/Qwen2-0.5B-Instruct.Q4_K_M.gguf"
+            "https://huggingface.co/QuantFactory/Qwen2-0.5B-Instruct-GGUF/resolve/main/Qwen2-0.5B-Instruct.Q2_K.gguf"
+            "https://huggingface.co/QuantFactory/Qwen2-0.5B-GGUF/resolve/main/Qwen2-0.5B.Q4_K_M.gguf"
+            "https://huggingface.co/QuantFactory/Qwen2-0.5B-GGUF/resolve/main/Qwen2-0.5B.Q2_K.gguf"
+            "https://huggingface.co/Felladrin/gguf-Q4_K_M-smollm-135m-instruct-v0.2/resolve/main/model.gguf"
+            "https://huggingface.co/Felladrin/gguf-Q8_0-smollm-135m-instruct-v0.2/resolve/main/model.gguf"
+            "https://huggingface.co/Felladrin/gguf-Q2_K-smollm-135m-instruct-v0.2/resolve/main/model.gguf"
+            "https://huggingface.co/Felladrin/gguf-Q4_K_M-smollm2-135m-instruct/resolve/main/model.gguf"
+            "https://huggingface.co/Felladrin/gguf-Q8_0-smollm2-135m-instruct/resolve/main/model.gguf"
+            "https://huggingface.co/Felladrin/gguf-Q2_K-smollm2-135m-instruct/resolve/main/model.gguf"
+            "https://huggingface.co/Felladrin/gguf-Q4_K_M-SmolLM2-135M/resolve/main/model.gguf"
+            "https://huggingface.co/Felladrin/gguf-Q8_0-SmolLM2-135M/resolve/main/model.gguf"
+            "https://huggingface.co/Felladrin/gguf-Q2_K-SmolLM2-135M/resolve/main/model.gguf"
+            "https://huggingface.co/MaziyarPanahi/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2.Q4_K_M.gguf"
+            "https://huggingface.co/MaziyarPanahi/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2.Q8_0.gguf"
+            "https://huggingface.co/MaziyarPanahi/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2.Q2_K.gguf"
+            "https://huggingface.co/MaziyarPanahi/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct.Q4_K_M.gguf"
+            "https://huggingface.co/MaziyarPanahi/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct.Q8_0.gguf"
+            "https://huggingface.co/MaziyarPanahi/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct.Q2_K.gguf"
+            "https://huggingface.co/lmstudio-community/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q4_K_M.gguf"
+            "https://huggingface.co/lmstudio-community/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf"
+            "https://huggingface.co/lmstudio-community/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q2_K.gguf"
+            "https://huggingface.co/lmstudio-community/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q4_K_M.gguf"
+            "https://huggingface.co/lmstudio-community/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q8_0.gguf"
+            "https://huggingface.co/lmstudio-community/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q2_K.gguf"
+            "https://huggingface.co/tensorblock/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q4_K_M.gguf"
+            "https://huggingface.co/tensorblock/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q8_0.gguf"
+            "https://huggingface.co/tensorblock/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct-Q2_K.gguf"
+            "https://huggingface.co/tensorblock/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q4_K_M.gguf"
+            "https://huggingface.co/tensorblock/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q8_0.gguf"
+            "https://huggingface.co/tensorblock/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q2_K.gguf"
+            "https://huggingface.co/mradermacher/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct.Q4_K_M.gguf"
+            "https://huggingface.co/mradermacher/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct.Q8_0.gguf"
+            "https://huggingface.co/mradermacher/SmolLM2-135M-Instruct-GGUF/resolve/main/SmolLM2-135M-Instruct.Q2_K.gguf"
+            "https://huggingface.co/mradermacher/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2.Q4_K_M.gguf"
+            "https://huggingface.co/mradermacher/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2.Q8_0.gguf"
+            "https://huggingface.co/mradermacher/SmolLM-135M-Instruct-v0.2-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2.Q2_K.gguf"
+            "https://huggingface.co/mradermacher/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M.Q4_K_M.gguf"
+            "https://huggingface.co/mradermacher/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M.Q8_0.gguf"
+            "https://huggingface.co/mradermacher/SmolLM2-135M-GGUF/resolve/main/SmolLM2-135M.Q2_K.gguf"
+          )
+
+          SUCCESS=0
+          for URL in "${URLS[@]}"; do
+            echo "Trying: $URL"
+            if curl -fL --max-time 120 --retry 2 \
+                -H "User-Agent: Mozilla/5.0" \
+                -o iso_root/model.gguf "$URL" 2>/dev/null; then
+              SIZE=$(wc -c < iso_root/model.gguf)
+              if [ "$SIZE" -gt 1048576 ]; then
+                echo "SUCCESS: downloaded $(du -sh iso_root/model.gguf | cut -f1) from $URL"
+                SUCCESS=1
+                break
+              else
+                echo "File too small ($SIZE bytes), skipping."
+                rm -f iso_root/model.gguf
+              fi
+            else
+              echo "Failed, trying next..."
+              rm -f iso_root/model.gguf
+            fi
+          done
+
+          if [ "$SUCCESS" -eq 0 ]; then
+            echo "ERROR: All model download URLs failed."
+            exit 1
+          fi
 
       - name: Assemble disc contents
         run: |
