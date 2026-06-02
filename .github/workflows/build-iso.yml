@@ -12,34 +12,20 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitppc:latest
 
     steps:
       # ── 1. Checkout ───────────────────────────────────────────────────────
       - uses: actions/checkout@v4
 
-      # ── 2. Install build tools ────────────────────────────────────────────
-      - name: Install dependencies
+      # ── 2. Install genisoimage + wget (toolchain already in container) ────
+      - name: Install genisoimage and wget
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y \
-            genisoimage \
-            wget \
-            ca-certificates
+          apt-get update -y
+          apt-get install -y genisoimage wget ca-certificates
 
-      # ── 3. Install devkitPPC toolchain ────────────────────────────────────
-      - name: Install devkitPro keyring & repo
-        run: |
-          wget -q https://apt.devkitpro.org/install-devkitpro-pacman
-          chmod +x install-devkitpro-pacman
-          sudo bash install-devkitpro-pacman <<< $'\n'
-
-      - name: Install devkitPPC + libogc
-        run: |
-          sudo dkp-pacman -Sy --noconfirm wii-dev
-        env:
-          DEVKITPRO: /opt/devkitpro
-
-      # ── 4. Build the Wii DOL ──────────────────────────────────────────────
+      # ── 3. Build the Wii DOL ──────────────────────────────────────────────
       - name: Build DOL
         run: |
           cd wii
@@ -48,20 +34,15 @@ jobs:
           DEVKITPRO: /opt/devkitpro
           DEVKITPPC: /opt/devkitpro/devkitPPC
 
-      # ── 5. Download the ~35M AI model ─────────────────────────────────────
-      #   SmolLM-135M at Q2_K quantisation ≈ 35 MB on disc.
-      #   Swap MODEL_URL for any other GGUF you prefer.
+      # ── 4. Download the ~35M AI model ─────────────────────────────────────
       - name: Download AI model
-        env:
-          MODEL_URL: https://huggingface.co/ggml-org/SmolLM-135M-Instruct-v0.2-Q2_K-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q2_K.gguf
         run: |
           mkdir -p iso_root
-          echo "Downloading model…"
-          wget -q --show-progress -O iso_root/model.gguf "$MODEL_URL"
-          SIZE=$(du -sh iso_root/model.gguf | cut -f1)
-          echo "Model downloaded: $SIZE"
+          wget -q -O iso_root/model.gguf \
+            "https://huggingface.co/ggml-org/SmolLM-135M-Instruct-v0.2-Q2_K-GGUF/resolve/main/SmolLM-135M-Instruct-v0.2-Q2_K.gguf"
+          echo "Model size: $(du -sh iso_root/model.gguf | cut -f1)"
 
-      # ── 6. Assemble ISO root directory ────────────────────────────────────
+      # ── 5. Assemble ISO root ──────────────────────────────────────────────
       - name: Assemble disc contents
         run: |
           if [ -f wii/app.dol ]; then
@@ -72,10 +53,9 @@ jobs:
             echo "ERROR: no .dol found after build."
             exit 1
           fi
-          echo "Disc contents:"
           ls -lh iso_root/
 
-      # ── 7. Build the ISO image ────────────────────────────────────────────
+      # ── 6. Build the ISO ──────────────────────────────────────────────────
       - name: Create ISO
         run: |
           genisoimage \
@@ -86,14 +66,14 @@ jobs:
             iso_root/
           echo "ISO size: $(du -sh wii-ai-chatbot.iso | cut -f1)"
 
-      # ── 8. Upload ISO as workflow artifact ────────────────────────────────
+      # ── 7. Upload artifact ────────────────────────────────────────────────
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
         with:
           name: wii-ai-chatbot-iso
           path: wii-ai-chatbot.iso
 
-      # ── 9. Publish to Releases on tag ─────────────────────────────────────
+      # ── 8. Release on tag ─────────────────────────────────────────────────
       - name: Create Release (on tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
@@ -101,12 +81,9 @@ jobs:
           files: wii-ai-chatbot.iso
           body: |
             ## WII-AI Chatbot — CD-ROM Image
-            The AI model is baked in. Just burn and boot.
-            1. Download `wii-ai-chatbot.iso`
-            2. ImgBurn → Write image file to disc
-            3. Blank CD-R, speed 4x, burn
+            AI model baked in. Just burn to a CD-R and boot.
 
-      # ── 10. Rolling "latest" release on every main push ───────────────────
+      # ── 9. Rolling latest release on main push ────────────────────────────
       - name: Create latest release (on main push)
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
@@ -116,7 +93,4 @@ jobs:
           files: wii-ai-chatbot.iso
           body: |
             ## Latest Build — WII-AI Chatbot (CD-ROM)
-            The AI model is baked in. Just burn and boot.
-            1. Download `wii-ai-chatbot.iso`
-            2. ImgBurn → Write image file to disc
-            3. Blank CD-R, speed 4x, burn
+            AI model baked in. Just burn to a CD-R and boot.
