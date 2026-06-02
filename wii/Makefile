@@ -25,10 +25,10 @@ OFILES := $(addprefix $(BUILD)/,$(CFILES:.c=.o))
 
 LIBS := -lwiiuse -lbte -logc -lm
 INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) -I$(LIBOGC_INC)
-EXTRA_LIBPATHS := -L$(LIBOGC_LIB)
+LIBOGC_LIBPATH := -L$(LIBOGC_LIB)
 
 CFLAGS := -g -O2 -Wall $(MACHDEP) $(INCLUDE)
-LDFLAGS := -g $(MACHDEP) $(EXTRA_LIBPATHS) $(LIBPATHS) $(LIBS)
+LDFLAGS := -g $(MACHDEP) $(LIBOGC_LIBPATH) $(LIBPATHS) $(LIBS)
 
 .PHONY: all clean
 
