@@ -1,18 +1,23 @@
 # WII-AI Chatbot
 
-A Nintendo Wii homebrew chatbot that runs directly on your TV. **No WiFi, no internet, no building, no commands.** Just download the ISO, burn it to a DVD-R, and play.
+A Nintendo Wii homebrew chatbot that runs directly on your TV. **No WiFi required.**
 
-## How to use (Windows)
+## Homebrew Channel setup (stock Wii)
 
-1. **Download** `wii-ai-chatbot.iso` from the [Releases page](../../releases/latest)
-2. **Open ImgBurn** (free: [imgburn.com](https://www.imgburn.com/))
-3. **Select** "Write image file to disc"
-4. **Choose** the downloaded `wii-ai-chatbot.iso`
-5. **Set write speed** to 2x–4x
-6. **Insert** a blank DVD-R and burn
-7. **Put the disc** in your softmodded Wii
-8. **Boot** via Priiloader or backup disc loader
-9. **Chat!** The AI appears on your TV immediately
+A normal (unmodded) Wii cannot boot burned discs. Use the Homebrew Channel (HBC), which can be installed for free with common exploits:
+
+- **str2hax**: https://wiibrew.org/wiki/Str2hax
+- **Bluebomb**: https://wiibrew.org/wiki/Bluebomb
+
+Follow one of those guides first to install HBC on your Wii.
+
+## How to use
+
+1. Download `wii-ai-chatbot-sd.zip` from the [Releases page](../../releases/latest)
+2. Extract it to your SD card root (so you get `SD:/apps/wii-ai-chatbot/boot.dol`)
+3. Insert the SD card into your Wii
+4. Open the Homebrew Channel
+5. Launch **WII-AI Chatbot**
 
 ## Controls (Wii Remote)
 
@@ -24,17 +29,8 @@ A Nintendo Wii homebrew chatbot that runs directly on your TV. **No WiFi, no int
 | + | Send your message |
 | HOME | Exit |
 
-## What you need
-
-- Nintendo Wii with softmod or modchip (to boot burned discs)
-- Blank DVD-R disc
-- Wii Remote
-- TV
-- [ImgBurn](https://www.imgburn.com/) on Windows (to burn the ISO)
-
 ## What this does
 
-- Boots from the burned disc — no setup, no WiFi
 - Shows a chat interface on your TV
 - You type with the on-screen keyboard using the Wii Remote D-pad
 - AI responds instantly — everything runs on the Wii CPU
@@ -42,13 +38,13 @@ A Nintendo Wii homebrew chatbot that runs directly on your TV. **No WiFi, no int
 
 ## Expanding the AI
 
-Edit `wii/source/ai_brain.c` and add new keyword/response rules in the `rules[]` table. Push to main and GitHub Actions will auto-build a new ISO in Releases.
+Edit `wii/source/ai_brain.c` and add new keyword/response rules in the `rules[]` table. Push to main and GitHub Actions will auto-build a new Homebrew Channel package in Releases.
 
 ## Project layout
 
 ```
 WII-ai-chatbot/
-├── .github/workflows/    ← Auto-builds the ISO (you never run this)
+├── .github/workflows/    ← Auto-builds HBC SD package
 ├── wii/
 │   ├── source/
 │   │   ├── main.c       ← Entry point
@@ -58,21 +54,19 @@ WII-ai-chatbot/
 │   │   └── *.h          ← Headers
 │   ├── Makefile
 │   └── meta.xml
-├── burn/
-│   └── burn_instructions.md
 └── README.md
 ```
 
 ## Troubleshooting
 
-- **Disc does not boot**: Stock Wii cannot boot burned discs — you need a softmod or modchip + backup loader.
+- **Homebrew Channel not installed**: Install HBC first using str2hax or Bluebomb (links above).
+- **App does not appear in HBC**: Confirm `SD:/apps/wii-ai-chatbot/boot.dol` and `SD:/apps/wii-ai-chatbot/meta.xml` exist.
 - **No picture**: Check TV input and video cable.
 - **Controls not working**: Re-sync Wii Remote (press SYNC on both Wii and Remote).
-- **ISO not in Releases**: Push code to `main` branch or create a tag like `v1.0` to trigger a build.
+- **Package not in Releases**: Push to `main` branch or create a tag like `v1.0` to trigger a build.
 
 ## Technical notes
 
 - Rule-based AI designed for Wii's limited 88MB RAM / 729MHz CPU
 - All logic runs on the Wii — zero network, zero cloud
-- GitHub Actions automatically compiles and packages the ISO on every push
-- You never need to install any dev tools — just download and burn
+- GitHub Actions compiles and packages an SD-card-ready Homebrew Channel zip on every push

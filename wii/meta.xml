@@ -3,7 +3,7 @@
   <name>WII-AI Chatbot</name>
   <coder>carterobviously-creator</coder>
   <version>1.0</version>
-  <release_date>20260601</release_date>
-  <short_description>AI chatbot server running on your Wii</short_description>
-  <long_description>Runs an AI chatbot HTTP server on your Wii over WiFi. Open the chat page on any browser on your iPad or phone to talk to the AI running on your Wii!</long_description>
+  <release_date>20260601000000</release_date>
+  <short_description>AI chatbot for your Wii</short_description>
+  <long_description>A rule-based AI chatbot you control with the Wii Remote D-pad. No internet required.</long_description>
 </app>
