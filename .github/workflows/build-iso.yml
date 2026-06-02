@@ -1,4 +1,4 @@
-name: Build and Release ISO
+name: Build Wii Homebrew Package
 
 on:
   push:
@@ -15,100 +15,51 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install wit (Wiimms ISO Tools)
-        run: |
-          apt-get update && apt-get install -y wget
-          wget -q https://wit.wiimm.de/download/wit-v3.05a-r8638-x86_64.tar.gz -O wit.tar.gz
-          tar xzf wit.tar.gz
-          cp wit-v3.05a-r8638-x86_64/bin/wit /usr/local/bin/
-          rm -rf wit.tar.gz wit-v3.05a-r8638-x86_64
-
-      - name: Install Wii build libraries
-        run: |
-          dkp-pacman -Sy --noconfirm
-          # libogc provides the ogc, wiiuse, and bte libraries used by the linker.
-          dkp-pacman -S --needed --noconfirm libogc
-
-      - name: Build app.dol
+      - name: Build DOL
         run: |
           cd wii
+          make clean
           make
         env:
           DEVKITPRO: /opt/devkitpro
           DEVKITPPC: /opt/devkitpro/devkitPPC
 
-      - name: Create Wii disc layout
+      - name: Package as Homebrew Channel app
         run: |
-          mkdir -p /tmp/wii-disc/sys /tmp/wii-disc/files
-          cp wii/app.dol /tmp/wii-disc/sys/main.dol
+          rm -rf dist
+          mkdir -p dist/apps/wii-ai-chatbot
 
-          # Generate boot.bin
-          python3 -c "
-          import struct
-          header = bytearray(0x440)
-          game_id = b'WAIC01'
-          header[0:6] = game_id
-          struct.pack_into('>I', header, 0x18, 0x5D1C9EA3)
-          title = b'WII-AI Chatbot'
-          header[0x20:0x20+len(title)] = title
-          with open('/tmp/wii-disc/sys/boot.bin', 'wb') as f:
-              f.write(header)
-          "
+          if [ -f wii/boot.dol ]; then
+            cp wii/boot.dol dist/apps/wii-ai-chatbot/boot.dol
+          elif [ -f wii/app.dol ]; then
+            cp wii/app.dol dist/apps/wii-ai-chatbot/boot.dol
+          else
+            echo "No DOL output found (expected wii/boot.dol or wii/app.dol)."
+            exit 1
+          fi
 
-          # Generate bi2.bin
-          python3 -c "
-          import struct
-          bi2 = bytearray(0x2000)
-          struct.pack_into('>I', bi2, 0x18, 1)
-          with open('/tmp/wii-disc/sys/bi2.bin', 'wb') as f:
-              f.write(bi2)
-          "
+          cp wii/meta.xml dist/apps/wii-ai-chatbot/meta.xml
+          (cd dist && zip -r ../wii-ai-chatbot-sd.zip apps)
 
-          # Generate apploader.img stub
-          python3 -c "
-          apploader = bytearray(0x20)
-          date = b'2026/06/01'
-          apploader[0:len(date)] = date
-          with open('/tmp/wii-disc/sys/apploader.img', 'wb') as f:
-              f.write(apploader)
-          "
-
-      - name: Build ISO
-        run: |
-          wit copy /tmp/wii-disc wii-ai-chatbot.iso --id WAIC01 --name "WII-AI Chatbot"
-
-      - name: Upload ISO artifact
+      - name: Upload SD package artifact
         uses: actions/upload-artifact@v4
         with:
-          name: wii-ai-chatbot-iso
-          path: wii-ai-chatbot.iso
+          name: wii-ai-chatbot-sd
+          path: wii-ai-chatbot-sd.zip
 
       - name: Create Release (on tag)
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: wii-ai-chatbot.iso
+          files: wii-ai-chatbot-sd.zip
           body: |
-            ## WII-AI Chatbot — Ready to Burn
+            ## WII-AI Chatbot — Homebrew Channel Package
 
-            **No building required. Just download and burn.**
-
-            ### How to use:
-            1. Download `wii-ai-chatbot.iso` below
-            2. Open **ImgBurn** on Windows
-            3. Select "Write image file to disc"
-            4. Choose `wii-ai-chatbot.iso`
-            5. Set speed to 2x–4x
-            6. Insert blank DVD-R and burn
-            7. Put disc in your softmodded Wii and boot it
-            8. Chat with the AI on your TV!
-
-            ### Controls:
-            - D-pad = navigate keyboard
-            - A = type letter
-            - B = backspace
-            - + = send message
-            - HOME = exit
+            1. Download `wii-ai-chatbot-sd.zip`
+            2. Extract it to the root of your SD card (`SD:/apps/wii-ai-chatbot/`)
+            3. Insert SD card into your Wii
+            4. Open Homebrew Channel
+            5. Launch **WII-AI Chatbot**
 
       - name: Create latest release (on main push)
         if: github.ref == 'refs/heads/main'
@@ -116,10 +67,12 @@ jobs:
         with:
           tag_name: latest
           prerelease: true
-          files: wii-ai-chatbot.iso
+          files: wii-ai-chatbot-sd.zip
           body: |
-            ## Latest Build — WII-AI Chatbot ISO
+            ## Latest Build — WII-AI Chatbot (Homebrew Channel)
 
-            Auto-built from the latest code. Download `wii-ai-chatbot.iso`, burn to DVD-R with ImgBurn, and play.
-
-            **Controls:** D-pad=move, A=type, B=delete, +=send, HOME=exit
+            1. Download `wii-ai-chatbot-sd.zip`
+            2. Extract it to the root of your SD card (`SD:/apps/wii-ai-chatbot/`)
+            3. Insert SD card into your Wii
+            4. Open Homebrew Channel
+            5. Launch **WII-AI Chatbot**
