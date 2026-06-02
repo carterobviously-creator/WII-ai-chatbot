@@ -2,3 +2,5 @@
 wii/build/
 wii/app.elf
 wii/app.dol
+dist/
+wii-ai-chatbot-sd.zip
